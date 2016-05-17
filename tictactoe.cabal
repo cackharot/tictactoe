@@ -15,8 +15,37 @@ cabal-version:       >=1.10
 executable tictactoe
   hs-source-dirs:      src
   main-is:             Main.hs
+  other-modules:       Game
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
-                    ,  lens
+                    ,  lens >= 4.13
                     ,  data-lens >= 2.10.7
                     ,  mtl >= 2.2.1
+                    ,  either-unwrap
+
+
+test-suite tictactoe-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+                     , src
+  main-is:             Spec.hs
+
+  other-modules:       Game
+  build-depends:       base >= 4.7 && < 5
+                    ,  hspec
+                    ,  HUnit
+                    ,  QuickCheck
+                    ,  lens >= 4.13
+                    ,  data-lens >= 2.10.7
+                    ,  mtl >= 2.2.1
+                    ,  test-framework
+                    ,  test-framework-hunit
+                    ,  test-framework-quickcheck2
+                    ,  either-unwrap
+  -- ghc-options:         -threaded -rtsopts -with-rtsopts=-N -fhpc
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/cackharot/tictactoe
