@@ -27,20 +27,10 @@ tests = [
             ]
        ]
 
-emptyPlayerGen :: Gen [Player]
-emptyPlayerGen = vectorOf 3 $ elements [EmptyPlayer]
-
-instance Arbitrary Board where
-   arbitrary = Board <$> pos <*> rows
+instance Arbitrary (Board a) where
+   arbitrary = Board <$> rows
      where
-      rows = vectorOf 3 emptyPlayerGen
-      pos = elements [[]]
-      --pos = arbitrary
-
-instance Arbitrary Position where
-   arbitrary = Position <$> pos <*> pos
-     --where pos = getPositive <$> arbitrary
-     where pos = choose (0,2)
+      rows = elements [[]]
 
 instance Arbitrary Player where
    arbitrary = Player <$> id <*> name

@@ -1,64 +1,66 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Game where
 
 import Control.Lens
 import Control.Monad.Trans (liftIO)
 import Data.Maybe
+import Data.List
 
 data Player = Player Int String | EmptyPlayer
   deriving (Eq,Show)
 
-type Row = [Player]
-data Board = Board {
-      boardMoves :: [Position]
-    , boardData :: [Row]
-  } deriving (Eq,Show)
+type Position = Int
 
-data Position = Position Int Int
+data PositionData = PositionData Player Position
+  deriving (Show, Eq)
+
+type BoardData = [PositionData]
+
+data FinishedBoard
+data InPlayBoard
+
+data Board a = Board [PositionData]
   deriving (Eq,Show)
 
-getPositionX :: Position -> Int
-getPositionX (Position x _) = x
+maxBoardSize = 9
 
-getPositionY :: Position -> Int
-getPositionY (Position _ y) = y
+createBoard :: Board InPlayBoard
+createBoard = Board []
 
-boardSizeX = 3
-boardSizeY = 3
+playerAt :: Board a -> Position -> Maybe Player
+playerAt board pos = case find (\(PositionData _ p)-> p == pos) b of
+    Nothing                       -> Nothing
+    Just (PositionData player _)  -> Just player
+  where b = boardData board
 
-createBoard :: Board
-createBoard = Board [] (take boardSizeY $ repeat . take boardSizeX $ repeat EmptyPlayer)
+positionIsOccupied :: Board a -> Position -> Bool
+positionIsOccupied board pos = isJust $ playerAt board pos
 
-getRow = element . getPositionX
-getCol = element . getPositionY
+boardData :: Board a -> BoardData
+boardData (Board x) = x
 
-playerAt :: Board -> Position -> Maybe Player
-playerAt board pos = (boardData board) ^? (element (getPositionX pos) . element (getPositionY pos))
-
-positionIsOccupied :: Board -> Position -> Bool
-positionIsOccupied board pos = hasPlayer $ playerAt board pos
-  where
-    hasPlayer (Just EmptyPlayer) = False
-    hasPlayer _                  = True
-
-updatePlayer board pos player = (getRow pos . getCol pos .~ player) (boardData board)
-
-move :: Board -> Player -> Position -> Either String Board
+move :: Board InPlayBoard -> Player -> Position -> Either String (Board InPlayBoard)
 move board player pos = if (positionIsOccupied board pos) then errorMsg else updatePosAndReturnNewBoard
   where
     errorMsg = Left "Invalid position. Already occupied!!"
-    updatePosAndReturnNewBoard = Right $ Board ((boardMoves board) ++ [pos]) $ updatePlayer board pos player
+    updatePosAndReturnNewBoard = Right $ Board newPos
+    newPos = ((boardData board) ++ [PositionData player pos])
 
-whoWon :: Board -> Player
-whoWon board = fromJust $ playerAt board (Position 0 0)
-
-takeBack :: Board -> Board
-takeBack board = Board stripLastPos $ updatePlayer board lastPos EmptyPlayer
+isFinished :: Board InPlayBoard -> Maybe (Board FinishedBoard)
+isFinished board = if noOfMoves >= 5 then Just $ Board bd else Nothing
   where
-    posHistory = boardMoves board
-    lastPos = last posHistory
-    stripLastPos = tail posHistory
+    noOfMoves = length bd
+    bd = boardData board
+
+whoWon :: Board FinishedBoard -> Player
+whoWon board = fromJust $ playerAt board 0
+
+takeBack :: Board a -> Board InPlayBoard
+takeBack board = Board stripLastPos
+  where
+    stripLastPos = tail (boardData board)
 
 playerA = Player 1 "PlayerA"
 playerB = Player 2 "PlayerB"

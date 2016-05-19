@@ -8,17 +8,21 @@ import Game
 
 main :: IO ()
 main = do
-  b <- return $ move createBoard playerA (Position 0 2)
+  b <- return $ move createBoard playerA 1
   print $ b
   case b of
     Right br -> do
-      print $ positionIsOccupied br (Position 1 1)
-      print $ positionIsOccupied br (Position 1 2)
-      br <- return $ takeBack br
-      print br
-      nb <- return $ (fromRight $ move br playerB (Position 1 1))
+      print $ positionIsOccupied br 1
+      print $ positionIsOccupied br 2
+      nb <- return $ (fromRight $ move br playerB 3)
       print nb
       print $ takeBack nb
+      br <- return $ fromRight $ move br playerB 0
+      print $ br
+      fb <- return $ isFinished br
+      case fb of
+        Nothing -> putStrLn "Game not over!!"
+        Just _b -> print $ whoWon _b
     Left msg -> do
       putStrLn msg
   putStrLn "Done!!!"
