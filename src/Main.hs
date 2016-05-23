@@ -17,7 +17,11 @@ main = do
       nb <- return $ (fromRight $ move br playerB 3)
       print nb
       print $ takeBack nb
-      br <- return $ fromRight $ move br playerB 0
+      br <- return $ fromRight $ move br playerA 2
+      br <- return $ fromRight $ move br playerB 3
+      br <- return $ fromRight $ move br playerA 5
+      br <- return $ fromRight $ move br playerB 7
+      br <- return $ fromRight $ move br playerA 6
       print $ br
       fb <- return $ isFinished br
       case fb of

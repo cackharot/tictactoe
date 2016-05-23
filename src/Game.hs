@@ -30,10 +30,10 @@ createBoard :: Board InPlayBoard
 createBoard = Board []
 
 playerAt :: Board a -> Position -> Maybe Player
-playerAt board pos = case find (\(PositionData _ p)-> p == pos) b of
-    Nothing                       -> Nothing
-    Just (PositionData player _)  -> Just player
-  where b = boardData board
+playerAt (Board xs) pos = getPlayer $ find (\(PositionData _ p)-> p == pos) xs
+
+getPlayer Nothing = Nothing
+getPlayer (Just (PositionData player _)) = Just player
 
 positionIsOccupied :: Board a -> Position -> Bool
 positionIsOccupied board pos = isJust $ playerAt board pos
@@ -49,13 +49,28 @@ move board player pos = if (positionIsOccupied board pos) then errorMsg else upd
     newPos = ((boardData board) ++ [PositionData player pos])
 
 isFinished :: Board InPlayBoard -> Maybe (Board FinishedBoard)
-isFinished board = if noOfMoves >= 5 then Just $ Board bd else Nothing
+isFinished (Board xs) = if noOfMoves >= 5 && isJust (whoWon finishedBoard) then Just finishedBoard else Nothing
   where
-    noOfMoves = length bd
-    bd = boardData board
+    noOfMoves = length xs
+    finishedBoard = Board xs
 
-whoWon :: Board FinishedBoard -> Player
-whoWon board = fromJust $ playerAt board 0
+whoWon :: Board FinishedBoard -> Maybe Player
+whoWon board
+  | isPlayerWon playerA = Just playerA
+  | isPlayerWon playerB = Just playerB
+  | otherwise = Nothing
+  where
+    isPlayerWon p = any (==True) (winPos p)
+    winPos p = fmap (\x->checkAtPos board x p) winPositions
+
+winPositions = [[0,1,2], [3,4,5], [6,7,8]
+               ,[0,3,6], [1,5,7], [2,6,8]
+               ,[0,5,8], [2,5,6]]
+
+checkAtPos :: Board FinishedBoard -> [Int] -> Player -> Bool
+checkAtPos (Board xs) winPos player = length playerCells == 3
+  where
+    playerCells = filter (\(PositionData ply pos)-> ply == player && (any (== pos) winPos)) xs
 
 takeBack :: Board a -> Board InPlayBoard
 takeBack board = Board stripLastPos
